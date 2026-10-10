@@ -78,8 +78,8 @@ public class Register {
 					DataBase.addUser(Integer.valueOf(userIdField.getText()), nameField.getText(), emailField.getText(), new String(passwordField.getPassword()));
 					JOptionPane.showMessageDialog(btnRegister, "User Added Successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
 
-				} catch (SQLException e1) {
-					JOptionPane.showMessageDialog(btnRegister, "Can't Add User\n"+e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(btnLogin, "Login error: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 					e1.printStackTrace();
 				}
 			}
