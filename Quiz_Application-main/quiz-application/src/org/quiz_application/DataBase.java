@@ -6,6 +6,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import org.sqlite.SQLiteDataSource;
+import java.security.SecureRandom;
+import java.util.Base64;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class DataBase {
 //	declaring connection and dataSource variables
@@ -69,45 +73,53 @@ public class DataBase {
 	
 
 	}
+	private static String hash(String password, byte[] salt) throws Exception {
+    PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
+    byte[] h = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+            .generateSecret(spec).getEncoded();
+    return Base64.getEncoder().encodeToString(h);
+}
+
+public static String newStoredPassword(String password) throws Exception {
+    byte[] salt = new byte[16];
+    new SecureRandom().nextBytes(salt);
+    return Base64.getEncoder().encodeToString(salt) + ":" + hash(password, salt);
+}
+
+public static boolean checkPassword(String password, String stored) throws Exception {
+    String[] parts = stored.split(":");
+    byte[] salt = Base64.getDecoder().decode(parts[0]);
+    return hash(password, salt).equals(parts[1]);
+}
 	
 //	Method to add user into the database
-	public static void addUser(int userID, String username, String email, String password) throws SQLException {
-		conn = ds.getConnection();
-		PreparedStatement ps =conn.prepareStatement("INSERT INTO "
-													+ "users(userID,username,email,password)"
-													+ "VALUES(?,?,?,?)");
-		ps.setInt(1, userID);
-		ps.setString(2, username);
-		ps.setString(3, email);
-		ps.setString(4, password);
-		
-		
-		ps.executeUpdate();
-		ps.close();
-		conn.close();
-	}
+	public static void addUser(int userID, String username, String email, String password) throws Exception {
+    conn = ds.getConnection();
+    PreparedStatement ps = conn.prepareStatement("INSERT INTO "
+                                                + "users(userID,username,email,password)"
+                                                + "VALUES(?,?,?,?)");
+    ps.setInt(1, userID);
+    ps.setString(2, username);
+    ps.setString(3, email);
+    ps.setString(4, newStoredPassword(password));   // hashed + salted
+
+    ps.executeUpdate();
+    ps.close();
+    conn.close();
+}
 	
 //Method to validata the user id and password
 	public static boolean validatePassword(String id, String password) throws SQLException {
 		conn = ds.getConnection();
-		String sql = "SELECT userID,password FROM users WHERE userID = ?;";
-		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setString(1,id );
-		ResultSet rs =  ps.executeQuery();
-		
-		
-		if (id.equals(rs.getString("userID"))  && password.equals(rs.getString("password"))) {
-			rs.close();
-			ps.close();
-			conn.close();
-			return true;
-		}
-		
-		rs.close();
-		ps.close();
-		conn.close();
-		return false;		
-	}
+		String sql = "SELECT password FROM users WHERE userID = ?";
+		try (Connection c = ds.getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        ps.setInt(1, Integer.parseInt(id.trim()));
+        try (ResultSet rs = ps.executeQuery()) {
+            return rs.next() && checkPassword(password, rs.getString("password"));
+        }
+    }
+}
 	
 //	Method to add the Question,Answer into the database
 	public static void addQuestion(String question,String[] options,String answer) throws SQLException {
