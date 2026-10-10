@@ -61,7 +61,7 @@ public class UserLogin {
 					} else {
 						JOptionPane.showMessageDialog(btnLogin, "ID or Password does not match","Invalid ID/Password",JOptionPane.ERROR_MESSAGE);
 					}
-				} catch (SQLException e1) {
+				} catch (Exception e1) {
 					e1.printStackTrace();
 				}
 			}
