@@ -1,8 +1,5 @@
 # Online Quiz Application
 
-**Project ID:** 65HIBKJS
-**Internship:** Java Developer Intern, InnoByte Services
-
 A desktop quiz application written in Java (Swing) with a SQLite database accessed through JDBC. Users register, log in and take a timed multiple-choice quiz. Administrators manage the question bank from a separate admin panel.
 
 ## Features
