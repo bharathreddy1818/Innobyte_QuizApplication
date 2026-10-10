@@ -1,5 +1,4 @@
-package org.projectgurukul;
-
+package org.quiz_application;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
